@@ -6,8 +6,8 @@ const ejs = require("ejs");
 const mongoose = require("mongoose");
 const alert = require("alert");
 // twilio info in 3 lines from here
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
+const accountSid = "";
+const authToken = "";
 const client = require("twilio")(accountSid, authToken);
 
 // nodemailer info is here
@@ -49,6 +49,7 @@ const userSchema = {
 const User = mongoose.model("User", userSchema);
 const donorSchema = {
   details: userSchema,
+  shareContact: Boolean,
 };
 const Donor = mongoose.model("Donor", donorSchema);
 const receiverSchema = {
@@ -94,14 +95,14 @@ const donor1=new Donor({
 })
 // donor1.save();*/
 
-var signedIntoAccount=false;
+var signedIntoAccount = false;
 
 // GET Request
 // Home
 app.get("/", function (req, res) {
   currentUser = null;
   res.render("home", {
-    pageTitle: "home page"
+    pageTitle: "home page",
   });
 });
 
@@ -131,6 +132,10 @@ app.get("/signup", function (req, res) {
 
 // Successfull Sign-up page
 app.get("/successfulSignUp", function (req, res) {
+  if (currentUser == null) {
+    alert("Sign In to Continue");
+    res.redirect("/signin");
+  }
   res.render("signinAfterSignupPage", {
     pageTitle: "Sign In Page",
   });
@@ -138,6 +143,10 @@ app.get("/successfulSignUp", function (req, res) {
 
 // ??
 app.get("/donorreceiverpage", function (req, res) {
+  if (currentUser == null) {
+    alert("Sign In to Continue");
+    res.redirect("/signin");
+  }
   Otp.deleteMany({}, function (err) {
     res.render("donorReceiverPage", {
       pageTitle: "welcome",
@@ -149,46 +158,63 @@ app.get("/donorreceiverpage", function (req, res) {
 app.get("/aboutus", function (req, res) {
   res.render("AboutTeam", {
     pageTitle: "about us",
-    signedIntoAccount:signedIntoAccount,
-    username:"???",
+    signedIntoAccount: signedIntoAccount,
+    username: "???",
   });
 });
 app.get("/homeAfterSignIn", function (req, res) {
   if (currentUser == null) {
-    alert("Please Sign In first");
+    alert("Sign In to Continue");
     res.redirect("/signin");
-  } else {
-    res.render("homeAfterSignIn", {
-      username: currentUser.username,
-      pageTitle: "Home",
-    });
   }
+  res.render("homeAfterSignIn", {
+    username: currentUser.username,
+    pageTitle: "Home",
+  });
 });
 app.get("/becomeADonor", (req, res) => {
   if (currentUser == null) {
-    alert("Please Sign In first");
+    alert("Sign In to Continue");
     res.redirect("/signin");
-  } else {
-    res.render("becomeADonor", {
-      username: currentUser.username,
-      pageTitle: "Become A Donor",
-    });
   }
+  Donor.findOne(
+    { "details.username": currentUser.username },
+    (err, results) => {
+      if (!results) {
+        res.render("becomeADonor", {
+          username: currentUser.username,
+          pageTitle: "Become A Donor",
+        });
+      } else {
+        alert("You are already registered as a Donor");
+        res.redirect("/donorList");
+      }
+    }
+  );
 });
 app.get("/becomeAReceiver", (req, res) => {
   if (currentUser == null) {
-    alert("Please Sign In first");
+    alert("Sign In to Continue");
     res.redirect("/signin");
-  } else {
-    res.render("becomeAReceiver", {
-      username: currentUser.username,
-      pageTitle: "Become A Receiver",
-    });
   }
+  Receiver.findOneAndDelete(
+    { "details.username": currentUser.username },
+    (err, results) => {
+      console.log(err);
+    }
+  );
+  res.render("becomeAReceiver", {
+    username: currentUser.username,
+    pageTitle: "Become A Receiver",
+  });
 });
 var receiverBloodGroup = null;
 // donor list
 app.get("/donorList", function (req, res) {
+  if (currentUser == null) {
+    alert("Sign In to Continue");
+    res.redirect("/signin");
+  }
   Donor.find(
     {
       "details.bloodGroup": receiverBloodGroup,
@@ -205,8 +231,13 @@ app.get("/donorList", function (req, res) {
       }
     }
   );
+  receiverBloodGroup = null;
 });
 app.get("/receiverList", (req, res) => {
+  if (currentUser == null) {
+    alert("Sign In to Continue");
+    res.redirect("/signin");
+  }
   Receiver.find(
     {
       "details.bloodGroup": currentUser.bloodGroup,
@@ -223,16 +254,16 @@ app.get("/receiverList", (req, res) => {
     }
   );
 });
-app.get("/logMeOut",function(req,res){
-  signedIntoAccount=false;
+app.get("/logMeOut", function (req, res) {
+  signedIntoAccount = false;
   res.redirect("/");
 });
 
-app.get("/eligible",function(req,res){
+app.get("/eligible", function (req, res) {
   res.render("eligible", {
-    pageTitle: "check your eligiblity"
+    pageTitle: "check your eligiblity",
   });
-})
+});
 
 // post requests
 // Sign In
@@ -250,7 +281,7 @@ app.post("/signin", function (req, res) {
     } else {
       currentUser = results;
       console.log(currentUser);
-      signedIntoAccount=true;
+      signedIntoAccount = true;
       res.redirect("/homeAfterSignIn");
     }
   });
@@ -360,41 +391,42 @@ console.log(check);
                   });
                   newUser.save();
                   const randOtp1 = Math.floor(1000 + Math.random() * 9000);
+                  console.log(randOtp1);
 
-                    client.messages
-                      .create({
-                        body: "your otp is" + randOtp1,
-                        from: "+19378216745",
-                        to: "+91" + ans.contact_no,
-                      })
-                      .then((message) => console.log(message.sid));
+                  client.messages
+                    .create({
+                      body: "your otp is" + randOtp1,
+                      from: "+19378216745",
+                      to: "+91" + ans.contact_no,
+                    })
+                    .then((message) => console.log(message.sid));
 
-                    const randotp2 = Math.floor(1000 + Math.random() * 9000);
+                  const randotp2 = Math.floor(1000 + Math.random() * 9000);
+                  console.log(randotp2);
+                  var mailOptions = {
+                    from: "bloodforyou5@gmail.com",
+                    to: ans.email,
+                    subject: "We have your otp for verification",
+                    text: "your Otp is " + randotp2,
+                  };
 
-                    var mailOptions = {
-                      from: "bloodforyou5@gmail.com",
-                      to: ans.email,
-                      subject: "We have your otp for verification",
-                      text: "your Otp is " + randotp2,
-                    };
+                  transporter.sendMail(mailOptions, function (error, info) {
+                    if (error) {
+                      console.log(error);
+                    } else {
+                      console.log("Email sent: " + info.response);
+                    }
+                  });
 
-                    transporter.sendMail(mailOptions, function (error, info) {
-                      if (error) {
-                        console.log(error);
-                      } else {
-                        console.log("Email sent: " + info.response);
-                      }
-                    });
+                  const newOtp = new Otp({
+                    phoneNo: ans.contact_no,
+                    otpPhone: randOtp1,
+                    email: ans.email,
+                    otpEmail: randotp2,
+                  });
+                  newOtp.save();
 
-                    const newOtp = new Otp({
-                      phoneNo: ans.contact_no,
-                      otpPhone: randOtp1,
-                      email: ans.email,
-                      otpEmail: randotp2,
-                    });
-                    newOtp.save();
-
-                    res.redirect("/otp");
+                  res.redirect("/otp");
                 }
                 // res.redirect("/successfulSignUp");
                 /*
@@ -472,14 +504,15 @@ app.post("/otp", function (req, res) {
   });
 });
 
-app.get("/aa",function(req,res){
-  res.render("donorReceiverPage",{
-    pageTitle:"welcome"
+app.get("/aa", function (req, res) {
+  res.render("donorReceiverPage", {
+    pageTitle: "welcome",
   });
 });
 app.post("/becomeADonor", (req, res) => {
   const newDonor = new Donor({
     details: currentUser,
+    shareContact: req.body.shareNumber,
   });
   newDonor.save();
   alert("Congratulations on Becoming A Donor !!!");
