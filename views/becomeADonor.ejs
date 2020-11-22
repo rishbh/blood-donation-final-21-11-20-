@@ -9,8 +9,21 @@
         <%-include("partials/signInNavbar")-%>
     </header>
     <form action="/becomeADonor" method="POST">
+        <input type="checkbox" id="checkbox" name="shareNumber" value="" onclick="checkCheckbox();">
+        <label for="shareNumber">Share Contact Number</label>
         <label for="">Are You Sure??</label>
         <button class="btn btn-lg btn-primary" type="submit">Yes</button>
     </form>
+    <script>
+        function checkCheckbox() {
+            if (document.getElementById("checkbox").checked === true) {
+                document.getElementById("checkbox").value = true;
+            }
+            else {
+                document.getElementById("checkbox").value = false;
+            }
+            console.log(document.getElementById("checkbox").value);
+        }
+    </script>
     <a href="/homeAfterSignIn">Head Back!!!</a>
     <%-include("partials/footer")-%>

@@ -25,7 +25,7 @@
       <div class="container">
 
         <div class="row">
-          <% for (let i=0;i<results.length;i++){%> %>
+          <% for (let i=0;i<results.length;i++){%>
           <div class="col-md-6 col-lg-4">
             <div class="card mb-4 shadow-sm">
               <!-- place the images here if required add them in the donor list folder -->
@@ -34,15 +34,16 @@
               <div class="card-body">
                 <!-- <p class="card-text">This is a wider card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.This is a wider card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.This is a wider card with supporting text below as a natural lead-in to additional content. This content is a little bit longer.</p> -->
                 <ul>
-                  <li> name: <%= results[i].details.name %></li>
+                  <li> Name: <%= results[i].details.name %></li>
+                  <% if(results[i].shareContact!=false){ %>
                   <li> contactNo: <%= results[i].details.contactNumber %></li>
+                  <% } %>
                   <li> bloodGroup: <%= results[i].details.bloodGroup %></li>
                   <li> gender: <%= results[i].details.gender %></li>
-                  <li> emailAdress: <%= results[i].details.emailAddress %></li>
-                  <li> city: <%= results[i].details.city %></li>
-                  <li> state: <%= results[i].details.state %></li>
-                  <li> pin: <%= results[i].details.pin %></li>
-                  <li> dateOfBirth: <%= results[i].dateOfBirth %></li>
+                  <li> E-mail Address: <%= results[i].details.emailAddress %></li>
+                  <li> City: <%= results[i].details.city %></li>
+                  <li> State: <%= results[i].details.state %></li>
+                  <li> Pin: <%= results[i].details.pin %></li>
                 </ul>
               </div>
             </div>
